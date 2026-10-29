@@ -1,0 +1,72 @@
+name: "Say-Do Diff"
+description: "Fail CI when an AI agent's reply claims an action its tool-call log does not support."
+author: "Solokit Studio"
+branding:
+  icon: "check-square"
+  color: "green"
+
+inputs:
+  message:
+    description: "Path to the agent's final reply (text file). Use with `log`."
+    required: false
+    default: ""
+  log:
+    description: "Path to the tool-call log (JSON or JSONL). Use with `message`."
+    required: false
+    default: ""
+  runs:
+    description: >
+      Directory of saved runs. Every sub-folder that holds a reply file and a log file is checked.
+      Use instead of message/log.
+    required: false
+    default: ""
+  reply-file:
+    description: "File name of the reply inside each run folder."
+    required: false
+    default: "reply.txt"
+  log-file:
+    description: "File name of the tool log inside each run folder."
+    required: false
+    default: "tool_log.json"
+  fail-on:
+    description: "`gap` (any unsupported claim), `stop-ship` (only unsupported payment/delete claims) or `never`."
+    required: false
+    default: "gap"
+  json-report:
+    description: "Optional path to write a combined JSON report."
+    required: false
+    default: ""
+  python:
+    description: "Python interpreter to use (3.9+)."
+    required: false
+    default: "python3"
+
+outputs:
+  claims:
+    description: "Number of claims checked."
+    value: ${{ steps.check.outputs.claims }}
+  gaps:
+    description: "Number of unsupported claims."
+    value: ${{ steps.check.outputs.gaps }}
+  stop-ship:
+    description: "`true` if a payment or delete claim is unsupported."
+    value: ${{ steps.check.outputs.stop-ship }}
+  failed-runs:
+    description: "Number of runs with at least one gap."
+    value: ${{ steps.check.outputs.failed-runs }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: check
+      shell: bash
+      env:
+        PYTHONPATH: ${{ github.action_path }}
+        SAYDO_MESSAGE: ${{ inputs.message }}
+        SAYDO_LOG: ${{ inputs.log }}
+        SAYDO_RUNS: ${{ inputs.runs }}
+        SAYDO_REPLY_FILE: ${{ inputs.reply-file }}
+        SAYDO_LOG_FILE: ${{ inputs.log-file }}
+        SAYDO_FAIL_ON: ${{ inputs.fail-on }}
+        SAYDO_JSON_REPORT: ${{ inputs.json-report }}
+      run: ${{ inputs.python }} "${{ github.action_path }}/action/run_action.py"

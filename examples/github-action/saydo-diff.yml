@@ -1,0 +1,32 @@
+# Copy to .github/workflows/saydo-diff.yml in your repo.
+# Expects saved agent runs under eval/runs/<run-name>/reply.txt + tool_log.json
+# (for example, written by your eval harness or by examples/langchain/saydo_callback.py).
+name: Say-Do Diff
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  saydo-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Optional: produce fresh runs here (replay your agent against fixtures), then check them.
+
+      - uses: SolokitStudio/say-do-diff@v0.2.0
+        with:
+          runs: eval/runs
+          fail-on: gap            # or: stop-ship (only payment/delete claims), never (report only)
+          json-report: saydo-report.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: saydo-report
+          path: saydo-report.json

@@ -1,5 +1,7 @@
 # Say-Do Diff
 
+[![CI](https://github.com/SolokitStudio/say-do-diff/actions/workflows/ci.yml/badge.svg)](https://github.com/SolokitStudio/say-do-diff/actions/workflows/ci.yml)
+
 Your agent's final message says *"I sent the proposal and refunded the $45."* Your tool log says the email was only queued (HTTP 202) and the refund timed out. Say-Do Diff finds that gap.
 
 It reads the agent's reply, pulls out each completed-action claim ("sent", "booked", "refunded", "all set"), and checks it against a JSON log of the tool calls from the same run. Every claim gets an evidence grade, and any claim whose wording is stronger than its evidence is flagged.
@@ -7,6 +9,12 @@ It reads the agent's reply, pulls out each completed-action claim ("sent", "book
 - Python 3.9+, standard library only, no network, no model in the loop.
 - Read-only: it reports gaps. It does not change the reply.
 - MIT licensed.
+
+![Say-Do Diff flagging unsupported claims in an agent reply](docs/demo.gif)
+
+*Real output from `examples/reply.txt` and `examples/tool_log.json`. Exit code 2 means a payment claim is unsupported.*
+
+Run it from the CLI, from Python, [in CI as a GitHub Action](#github-action), or on logs recorded by the [LangChain callback](#langchain--langgraph) or the [n8n adapter](#n8n).
 
 ## Quickstart
 
@@ -62,6 +70,38 @@ report = diff(reply_text, "runs/tool_log.json")   # a path, a JSON string, JSONL
 for f in report.gaps:
     print(f.claim.verb, f.grade, f.reason)
 ```
+
+## GitHub Action
+
+Check saved agent runs on every pull request and fail the build when a reply claims more than its tool log shows.
+
+```yaml
+- uses: actions/checkout@v4
+- uses: SolokitStudio/say-do-diff@v0.2.0
+  with:
+    runs: eval/runs            # each sub-folder holds reply.txt + tool_log.json
+    fail-on: gap               # gap | stop-ship | never
+    json-report: saydo-report.json
+```
+
+Or check a single pair with `message:` and `log:` instead of `runs:`. Each gap becomes an error annotation on the reply file, the job summary gets a table per run, and the step sets `claims`, `gaps`, `stop-ship` and `failed-runs` outputs. The action is a composite action that uses the runner's Python 3.9+ (`python3` on the Linux and macOS hosted runners; set the `python` input elsewhere) and installs nothing. A full workflow is in [`examples/github-action/saydo-diff.yml`](examples/github-action/saydo-diff.yml), and [`examples/ci/runs`](examples/ci/runs) has a passing and a failing run that this repo's own CI checks.
+
+The action checks logs you already have; producing them (replaying your agent against fixtures, or saving production runs) is up to your pipeline.
+
+## LangChain / LangGraph
+
+[`examples/langchain`](examples/langchain) has a callback handler that records tool calls into the log format above while your agent runs:
+
+```python
+from saydo_callback import SayDoCallbackHandler
+
+handler = SayDoCallbackHandler({"send_email": {"action": "send", "target": "to", "id": "id", "status": "status"}})
+result = agent.invoke(inputs, config={"callbacks": [handler]})
+print(handler.check(final_reply).to_text())
+handler.write("eval/runs/run-001/tool_log.json")
+```
+
+Only tools you list are recorded, and a tool that returns plain text with no id grades S2, so the log can't back a past-tense claim on its own. `python3 examples/langchain/demo_offline.py` runs it without a model or API key.
 
 ## n8n
 
@@ -128,6 +168,10 @@ This repo is the free, read-only checker. The paid [Say-Do Gate](https://solokit
 The trade-off: the Gate needs you to wrap your tools so they write receipts, which is more setup than pointing this checker at a log you already have.
 
 If you'd rather audit by hand first, the free [Say-Do Diff checklist](https://solokit33.gumroad.com/l/bkgskz) is a 10-minute paper version of the same check. The Gate is also included in the [Operations Suite](https://solokit33.gumroad.com/l/operations-trio) ($149).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](ROADMAP.md). Questions and ideas go in [Discussions](https://github.com/SolokitStudio/say-do-diff/discussions); small starter tasks are labelled [good first issue](https://github.com/SolokitStudio/say-do-diff/labels/good%20first%20issue).
 
 ## License
 
