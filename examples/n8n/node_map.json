@@ -1,0 +1,28 @@
+{
+  "reply": {
+    "node": "AI Agent",
+    "field": "output"
+  },
+  "nodes": {
+    "Send Proposal (Gmail)": {
+      "tool": "gmail.send",
+      "action": "send",
+      "target_value": "dana@acme.com",
+      "id": "id"
+    },
+    "Create Demo Event": {
+      "tool": "gcal.create",
+      "action": "book",
+      "target": "summary",
+      "id": "id"
+    },
+    "Refund (HTTP Request)": {
+      "tool": "stripe.refund",
+      "action": "pay",
+      "target_value": "order 88412",
+      "id": "id",
+      "status": "status",
+      "amount": "amount_usd"
+    }
+  }
+}

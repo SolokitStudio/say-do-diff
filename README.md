@@ -63,6 +63,10 @@ for f in report.gaps:
     print(f.claim.verb, f.grade, f.reason)
 ```
 
+## n8n
+
+[`examples/n8n`](examples/n8n) turns a saved n8n execution into a tool log and checks the AI Agent's reply against it. It grades any node you list in a node map (the sample maps Gmail, Google Calendar and an HTTP Request refund), including AI Agent tool sub-nodes, and reads the execution from the n8n API or a saved JSON file. A sample execution and node map are included, and the README there covers run steps and limits.
+
 ## Evidence grades
 
 | Grade | What the tool log shows | Wording it supports |
