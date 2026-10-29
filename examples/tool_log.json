@@ -1,0 +1,9 @@
+[
+  {"tool": "sendgrid.send", "action": "send", "target": "dana@acme.com", "http_status": 202, "status": "accepted"},
+  {"tool": "calendar.create_event", "action": "book", "target": "Dana demo Tuesday", "status": "done", "id": "evt_5521"},
+  {"tool": "stripe.refund", "action": "pay", "target": "order 88412", "amount": 45, "error": "timeout"},
+  {"tool": "invoices.send", "action": "send", "target": "invoice 1001", "status": "done", "id": "msg_1"},
+  {"tool": "invoices.send", "action": "send", "target": "invoice 1002", "status": "done", "id": "msg_2"},
+  {"tool": "invoices.send", "action": "send", "target": "invoice 1003", "status": "done", "id": "msg_3"},
+  {"tool": "invoices.send", "action": "send", "target": "invoice 1003", "status": "done", "id": "msg_4"}
+]
