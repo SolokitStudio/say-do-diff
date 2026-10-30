@@ -19,7 +19,7 @@ jobs:
 
       # Optional: produce fresh runs here (replay your agent against fixtures), then check them.
 
-      - uses: SolokitStudio/say-do-diff@v0.2.0
+      - uses: SolokitStudio/say-do-diff@v0
         with:
           runs: eval/runs
           fail-on: gap            # or: stop-ship (only payment/delete claims), never (report only)

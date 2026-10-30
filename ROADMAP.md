@@ -12,6 +12,8 @@ This list is a plan, not a promise of dates. Ideas and pull requests are welcome
 - **v0.2.0**: GitHub Action (`uses: SolokitStudio/say-do-diff@v0.2.0`) that checks one run or a
   folder of saved runs and fails CI on unsupported claims; LangChain / LangGraph callback handler
   (`examples/langchain`).
+- **v0.2.1**: LangChain callback keeps attempted arguments on failed tool calls; Python 3.10+;
+  CI; moving `v0` tag (`uses: SolokitStudio/say-do-diff@v0`).
 
 ## Next
 

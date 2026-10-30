@@ -77,7 +77,7 @@ Check saved agent runs on every pull request and fail the build when a reply cla
 
 ```yaml
 - uses: actions/checkout@v7
-- uses: SolokitStudio/say-do-diff@v0.2.0
+- uses: SolokitStudio/say-do-diff@v0
   with:
     runs: eval/runs            # each sub-folder holds reply.txt + tool_log.json
     fail-on: gap               # gap | stop-ship | never

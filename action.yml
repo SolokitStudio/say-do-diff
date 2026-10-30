@@ -2,7 +2,7 @@ name: "Say-Do Diff"
 description: "Fail CI when an AI agent's reply claims an action its tool-call log does not support."
 author: "Solokit Studio"
 branding:
-  icon: "check-square"
+  icon: "check-circle"
   color: "green"
 
 inputs:

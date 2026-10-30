@@ -15,7 +15,11 @@ def main(argv=None) -> int:
     p.add_argument("--log", "-l", required=True, help="JSON or JSONL tool-call log")
     p.add_argument("--json", action="store_true", help="print a JSON report")
     a = p.parse_args(argv)
-    text = sys.stdin.read() if a.message == "-" else open(a.message, encoding="utf-8").read()
+    if a.message == "-":
+        text = sys.stdin.read()
+    else:
+        with open(a.message, encoding="utf-8") as f:
+            text = f.read()
     report = diff(text, a.log)
     print(json.dumps(report.to_dict(), indent=2) if a.json else report.to_text())
     if report.stop_ship:

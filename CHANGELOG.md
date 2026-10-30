@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.2.1 (2026-10-30)
 
 - **LangChain callback fix.** A tool call that raised (`on_tool_error`) now keeps the attempted
   `amount` and `idempotency_key` from the tool's input, so a failed refund is logged with its amount
@@ -10,6 +10,12 @@
 - **Python 3.10+.** Python 3.9 is end-of-life and no longer on GitHub's hosted runners; CI now runs
   3.10–3.13 and `requires-python` is `>=3.10`.
 - CI workflow added (unit tests on 3.10–3.13, a langchain-core job, and a self-test of the Action).
+- Workflows and examples use `actions/checkout@v7`, `actions/setup-python@v7` and
+  `actions/upload-artifact@v7` (Node 24).
+- Moving major tag `v0`: `uses: SolokitStudio/say-do-diff@v0` follows the latest v0.x release.
+- CLI closes the reply file after reading it (no `ResourceWarning`).
+- Action metadata ready for the GitHub Marketplace (description, branding).
+- No changes to grading or the CLI.
 
 ## v0.2.0 (2026-10-29)
 
