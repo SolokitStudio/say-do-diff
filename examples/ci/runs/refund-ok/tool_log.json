@@ -1,0 +1,4 @@
+[
+  {"tool": "stripe.refund", "action": "pay", "target": "order 88412", "amount": 45, "status": "succeeded", "id": "re_3Pq9"},
+  {"tool": "gmail.send", "action": "send", "target": "dana@acme.com", "status": "sent", "id": "msg_18c2"}
+]

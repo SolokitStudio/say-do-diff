@@ -1,7 +1,5 @@
 # Say-Do Diff
 
-[![CI](https://github.com/SolokitStudio/say-do-diff/actions/workflows/ci.yml/badge.svg)](https://github.com/SolokitStudio/say-do-diff/actions/workflows/ci.yml)
-
 Your agent's final message says *"I sent the proposal and refunded the $45."* Your tool log says the email was only queued (HTTP 202) and the refund timed out. Say-Do Diff finds that gap.
 
 It reads the agent's reply, pulls out each completed-action claim ("sent", "booked", "refunded", "all set"), and checks it against a JSON log of the tool calls from the same run. Every claim gets an evidence grade, and any claim whose wording is stronger than its evidence is flagged.
@@ -84,7 +82,7 @@ Check saved agent runs on every pull request and fail the build when a reply cla
     json-report: saydo-report.json
 ```
 
-Or check a single pair with `message:` and `log:` instead of `runs:`. Each gap becomes an error annotation on the reply file, the job summary gets a table per run, and the step sets `claims`, `gaps`, `stop-ship` and `failed-runs` outputs. The action is a composite action that uses the runner's Python 3.9+ (`python3` on the Linux and macOS hosted runners; set the `python` input elsewhere) and installs nothing. A full workflow is in [`examples/github-action/saydo-diff.yml`](examples/github-action/saydo-diff.yml), and [`examples/ci/runs`](examples/ci/runs) has a passing and a failing run that this repo's own CI checks.
+Or check a single pair with `message:` and `log:` instead of `runs:`. Each gap becomes an error annotation on the reply file, the job summary gets a table per run, and the step sets `claims`, `gaps`, `stop-ship` and `failed-runs` outputs. The action is a composite action that uses the runner's Python 3.9+ (`python3` on the Linux and macOS hosted runners; set the `python` input elsewhere) and installs nothing. A full workflow is in [`examples/github-action/saydo-diff.yml`](examples/github-action/saydo-diff.yml), and [`examples/ci/runs`](examples/ci/runs) has a passing and a failing run to try it on.
 
 The action checks logs you already have; producing them (replaying your agent against fixtures, or saving production runs) is up to your pipeline.
 

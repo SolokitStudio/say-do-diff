@@ -1,0 +1,4 @@
+[
+  {"tool": "stripe.refund", "action": "pay", "target": "order 88412", "amount": 45, "error": "timeout"},
+  {"tool": "gmail.send", "action": "send", "target": "dana@acme.com", "http_status": 202, "status": "queued"}
+]
