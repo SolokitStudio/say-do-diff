@@ -1,5 +1,7 @@
 # Say-Do Diff
 
+[![CI](https://github.com/SolokitStudio/say-do-diff/actions/workflows/ci.yml/badge.svg)](https://github.com/SolokitStudio/say-do-diff/actions/workflows/ci.yml)
+
 Your agent's final message says *"I sent the proposal and refunded the $45."* Your tool log says the email was only queued (HTTP 202) and the refund timed out. Say-Do Diff finds that gap.
 
 It reads the agent's reply, pulls out each completed-action claim ("sent", "booked", "refunded", "all set"), and checks it against a JSON log of the tool calls from the same run. Every claim gets an evidence grade, and any claim whose wording is stronger than its evidence is flagged.
