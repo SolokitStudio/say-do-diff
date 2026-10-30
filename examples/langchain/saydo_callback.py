@@ -25,6 +25,7 @@ past-tense claim. Make your tools return the provider's id and status to reach S
 
 Works with or without langchain-core installed (it subclasses BaseCallbackHandler when available).
 """
+import ast
 import json
 import os
 import sys
@@ -63,9 +64,26 @@ def _as_dict(value):
         try:
             parsed = json.loads(value)
         except ValueError:
-            return {}
+            # LangChain passes input_str as str(dict), a Python repr rather than JSON.
+            try:
+                parsed = ast.literal_eval(value)
+            except (ValueError, SyntaxError, MemoryError, RecursionError):
+                return {}
         return parsed if isinstance(parsed, dict) else {}
     return {}
+
+
+_INPUT_FALLBACK_FIELDS = ("amount", "idempotency_key")
+
+
+def _fill_from_inputs(spec, args, entry):
+    """Copy amount / idempotency_key from the tool's input when the output did not supply them."""
+    for field in _INPUT_FALLBACK_FIELDS:
+        path = spec.get(field)
+        if path and field not in entry:
+            val = _dig(args, path)
+            if val is not None:
+                entry[field] = val
 
 
 class SayDoCallbackHandler(_Base):
@@ -86,6 +104,7 @@ class SayDoCallbackHandler(_Base):
         spec = self.tool_map.get(name)
         if spec is None:
             return
+        # langchain-core passes the parsed arguments as `inputs`; input_str is str(dict).
         args = inputs if isinstance(inputs, dict) else _as_dict(input_str)
         entry = {"tool": spec.get("tool", name), "action": spec["action"]}
         if "target_value" in spec:
@@ -107,10 +126,9 @@ class SayDoCallbackHandler(_Base):
             if not path:
                 continue
             val = _dig(out, path)
-            if val is None and field in ("amount", "idempotency_key"):
-                val = _dig(args, path)
             if val is not None:
                 entry[field] = val
+        _fill_from_inputs(spec, args, entry)
         if getattr(output, "status", None) == "error":  # ToolMessage(status="error")
             entry["error"] = str(getattr(output, "content", "tool error"))
         elif "status" not in entry and "http_status" not in entry:
@@ -122,7 +140,9 @@ class SayDoCallbackHandler(_Base):
         item = self._pending.pop(str(run_id), None)
         if item is None:
             return
-        _, _, entry = item
+        spec, args, entry = item
+        # The call failed, but what was attempted (amount, idempotency key) is still evidence.
+        _fill_from_inputs(spec, args, entry)
         entry["error"] = f"{type(error).__name__}: {error}"
         self.calls.append(entry)
 

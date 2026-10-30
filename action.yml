@@ -37,7 +37,7 @@ inputs:
     required: false
     default: ""
   python:
-    description: "Python interpreter to use (3.9+)."
+    description: "Python interpreter to use (3.10+)."
     required: false
     default: "python3"
 

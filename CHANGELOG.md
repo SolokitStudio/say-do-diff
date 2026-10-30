@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **LangChain callback fix.** A tool call that raised (`on_tool_error`) now keeps the attempted
+  `amount` and `idempotency_key` from the tool's input, so a failed refund is logged with its amount
+  as it is for successful calls. The handler also parses `input_str` when it is a Python dict repr
+  (how langchain-core builds it) if `inputs` is not passed. Covered by a test against real
+  langchain-core in CI.
+- **Python 3.10+.** Python 3.9 is end-of-life and no longer on GitHub's hosted runners; CI now runs
+  3.10–3.13 and `requires-python` is `>=3.10`.
+- CI workflow added (unit tests on 3.10–3.13, a langchain-core job, and a self-test of the Action).
+
 ## v0.2.0 (2026-10-29)
 
 - **GitHub Action.** `uses: SolokitStudio/say-do-diff@v0.2.0` checks one `message` + `log` pair or
@@ -10,7 +21,7 @@
   calls in the Say-Do Diff log format; `handler.check(reply)` and `handler.write(path)`. Offline demo
   and tests that need no API key.
 - **n8n example** (`examples/n8n`), added after v0.1.0.
-- Demo GIF, ROADMAP, CONTRIBUTING, CI on Python 3.9–3.13.
+- Demo GIF, ROADMAP, CONTRIBUTING, CI on Python 3.10–3.13.
 - No changes to grading or the CLI.
 
 ## v0.1.0

@@ -110,6 +110,24 @@ class LangChainCallbackTest(unittest.TestCase):
         self.assertEqual(p.returncode, 2, p.stdout + p.stderr)
         self.assertIn("[ok ] booked", p.stdout)
 
+    def test_failed_call_keeps_attempted_amount(self):
+        h = SayDoCallbackHandler(MAP)
+        run(h, "issue_refund", {"order": "order 88412", "amount": 45}, error=TimeoutError("stripe timed out"))
+        self.assertEqual(h.calls[0]["amount"], 45)
+        self.assertEqual(h.calls[0]["target"], "order 88412")
+        self.assertIn("TimeoutError", h.calls[0]["error"])
+        self.assertEqual(grade_call(h.calls[0]), "S1")
+
+    def test_python_repr_input_str_without_inputs_kwarg(self):
+        # Older callers only pass input_str, which LangChain builds with str(dict), not JSON.
+        h = SayDoCallbackHandler(MAP)
+        args = {"order": "order 7", "amount": 12.5}
+        rid = uuid.uuid4()
+        h.on_tool_start({"name": "issue_refund"}, str(args), run_id=rid)
+        h.on_tool_end({"id": "re_1", "status": "succeeded"}, run_id=rid)
+        self.assertEqual(h.calls[0]["target"], "order 7")
+        self.assertEqual(h.calls[0]["amount"], 12.5)
+
     @unittest.skipUnless(HAS_LC, "langchain-core not installed")
     def test_real_langchain_tool_invocation(self):
         from langchain_core.tools import tool

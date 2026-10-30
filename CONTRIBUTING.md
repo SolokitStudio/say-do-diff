@@ -16,7 +16,7 @@ small too.
 
 ```bash
 git clone https://github.com/SolokitStudio/say-do-diff.git && cd say-do-diff
-python3 -m unittest discover -s tests          # Python 3.9+
+python3 -m unittest discover -s tests          # Python 3.10+
 python3 -m saydo_diff --message examples/reply.txt --log examples/tool_log.json
 ```
 
