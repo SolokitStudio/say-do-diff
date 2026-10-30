@@ -1,6 +1,7 @@
 import io
 import json
 import os
+import shutil
 import sys
 import tempfile
 import unittest
@@ -48,6 +49,39 @@ class ActionTest(unittest.TestCase):
         self.assertIn("| refund-ok | 2 | 0 | no |", s)
         with open(report) as fh:
             self.assertEqual(len(json.load(fh)["runs"]), 2)
+
+    def test_recursive_runs_glob(self):
+        for group, name in (("a", "run-1"), ("b", "run-2")):
+            destination = os.path.join(self.tmp.name, "eval", group, name)
+            shutil.copytree(os.path.join(RUNS, "refund-ok"), destination)
+        report = os.path.join(self.tmp.name, "r.json")
+        pattern = os.path.join(self.tmp.name, "eval", "**", "run-*")
+        code, _ = run(SAYDO_RUNS=pattern, SAYDO_JSON_REPORT=report, GITHUB_OUTPUT=self.out)
+        self.assertEqual(code, 0)
+        self.assertEqual(self.outputs()["claims"], "4")
+        with open(report) as fh:
+            runs = json.load(fh)["runs"]
+        self.assertEqual(len(runs), 2)
+        self.assertNotEqual(runs[0]["run"], runs[1]["run"])
+
+    def test_glob_does_not_count_nested_runs_twice(self):
+        destination = os.path.join(self.tmp.name, "eval", "run-1")
+        shutil.copytree(os.path.join(RUNS, "refund-ok"), destination)
+        code, _ = run(SAYDO_RUNS=os.path.join(self.tmp.name, "eval", "**"),
+                      GITHUB_OUTPUT=self.out)
+        self.assertEqual(code, 0)
+        self.assertEqual(self.outputs()["claims"], "2")
+
+    def test_unmatched_runs_glob_is_an_error(self):
+        with self.assertRaisesRegex(SystemExit, "no folder"):
+            run(SAYDO_RUNS=os.path.join(self.tmp.name, "missing-*"))
+
+    def test_literal_runs_directory_with_glob_characters(self):
+        destination = os.path.join(self.tmp.name, "runs[1]")
+        shutil.copytree(os.path.join(RUNS, "refund-ok"), destination)
+        code, _ = run(SAYDO_RUNS=destination, GITHUB_OUTPUT=self.out)
+        self.assertEqual(code, 0)
+        self.assertEqual(self.outputs()["claims"], "2")
 
     def test_single_clean_pair_passes(self):
         d = os.path.join(RUNS, "refund-ok")

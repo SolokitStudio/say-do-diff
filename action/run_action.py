@@ -4,6 +4,7 @@ Reads its settings from SAYDO_* environment variables (set by action.yml), check
 message/log pair or every run folder under SAYDO_RUNS, prints the text report, writes a
 job summary and error annotations, sets step outputs, and exits non-zero per SAYDO_FAIL_ON.
 """
+import glob
 import json
 import os
 import sys
@@ -21,11 +22,17 @@ def pairs(env):
         if msg or log:
             raise SystemExit("say-do-diff: set either `runs` or `message` + `log`, not both")
         rf, lf = env.get("SAYDO_REPLY_FILE") or "reply.txt", env.get("SAYDO_LOG_FILE") or "tool_log.json"
+        literal = os.path.isdir(runs)
+        roots = [runs] if literal else glob.glob(runs, recursive=True)
         found = []
-        for root, _dirs, files in os.walk(runs):
-            if rf in files and lf in files:
-                name = os.path.relpath(root, runs)
-                found.append((name, os.path.join(root, rf), os.path.join(root, lf)))
+        seen = set()
+        for runs_root in roots:
+            for root, _dirs, files in os.walk(runs_root):
+                key = os.path.abspath(root)
+                if rf in files and lf in files and key not in seen:
+                    name = os.path.relpath(root, runs) if literal else os.path.normpath(root)
+                    found.append((name, os.path.join(root, rf), os.path.join(root, lf)))
+                    seen.add(key)
         if not found:
             raise SystemExit(f"say-do-diff: no folder under {runs!r} has both {rf} and {lf}")
         return sorted(found)
