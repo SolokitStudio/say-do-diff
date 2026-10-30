@@ -15,7 +15,7 @@ jobs:
   saydo-diff:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Optional: produce fresh runs here (replay your agent against fixtures), then check them.
 
@@ -25,7 +25,7 @@ jobs:
           fail-on: gap            # or: stop-ship (only payment/delete claims), never (report only)
           json-report: saydo-report.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: saydo-report

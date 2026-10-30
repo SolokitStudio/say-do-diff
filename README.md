@@ -76,7 +76,7 @@ for f in report.gaps:
 Check saved agent runs on every pull request and fail the build when a reply claims more than its tool log shows.
 
 ```yaml
-- uses: actions/checkout@v4
+- uses: actions/checkout@v7
 - uses: SolokitStudio/say-do-diff@v0.2.0
   with:
     runs: eval/runs            # each sub-folder holds reply.txt + tool_log.json
