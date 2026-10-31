@@ -1,0 +1,34 @@
+[
+  {
+    "timestamp": "2026-10-31T01:31:47.470Z",
+    "agentId": "did:agentmesh:billing-agent:4b1d",
+    "action": "stripe.refunds.create",
+    "decision": "allow",
+    "hash": "d87f364f16b6c89236054ece6dc51ac5bdcf3d3399f700c6240c2c2e1f846f59",
+    "previousHash": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "timestamp": "2026-10-31T01:31:47.471Z",
+    "agentId": "did:agentmesh:billing-agent:4b1d",
+    "action": "email.send",
+    "decision": "allow",
+    "hash": "9956de1ca1c50ddc1810732b854f52b3205daa6e7809c3a4eef72553a510ab6b",
+    "previousHash": "d87f364f16b6c89236054ece6dc51ac5bdcf3d3399f700c6240c2c2e1f846f59"
+  },
+  {
+    "timestamp": "2026-10-31T01:31:47.471Z",
+    "agentId": "did:agentmesh:billing-agent:4b1d",
+    "action": "crm.customers.delete",
+    "decision": "deny",
+    "hash": "7955dc6a43ec020830eec7d77dcd6479fcfcfcd45d3d5a04dae5219f3c02be71",
+    "previousHash": "9956de1ca1c50ddc1810732b854f52b3205daa6e7809c3a4eef72553a510ab6b"
+  },
+  {
+    "timestamp": "2026-10-31T01:31:47.471Z",
+    "agentId": "did:agentmesh:billing-agent:4b1d",
+    "action": "ledger.post",
+    "decision": "review",
+    "hash": "268be4b64855664f87efb7246658d6638a96a43670f91c0458ac894837893b32",
+    "previousHash": "7955dc6a43ec020830eec7d77dcd6479fcfcfcd45d3d5a04dae5219f3c02be71"
+  }
+]

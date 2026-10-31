@@ -1,0 +1,208 @@
+[
+  {
+    "specversion": "1.0",
+    "id": "audit_450858d74f8246b0",
+    "type": "ai.agentmesh.agent_invocation",
+    "source": "support-agent",
+    "time": "2026-10-31T01:31:21.638825+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "start",
+      "resource": null,
+      "outcome": "success",
+      "policy_decision": null,
+      "matched_rule": null,
+      "agent_name": "support-agent",
+      "message_count": 3,
+      "stream": false
+    },
+    "agentmeshentryhash": "72efbe8c917a8ab7c3d8f286b88c4d13dd382e921833beac04b0f83e0355ed5c",
+    "agentmeshprevioushash": ""
+  },
+  {
+    "specversion": "1.0",
+    "id": "audit_a5e45b6f0f0b4f19",
+    "type": "ai.agentmesh.policy.evaluation",
+    "source": "support-agent",
+    "time": "2026-10-31T01:31:21.639463+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "allow",
+      "resource": null,
+      "outcome": "success",
+      "policy_decision": "allow",
+      "matched_rule": null,
+      "message_preview": "Customer Dana Reyes (dana@example.com) was double charged on order 7731. Refund the duplicate charge, close the duplicate account, and tell her."
+    },
+    "agentmeshentryhash": "fcde1892e3b152d79c60d8e69b2c4eef706661f94197c1238be19ddc21a33717",
+    "agentmeshprevioushash": "72efbe8c917a8ab7c3d8f286b88c4d13dd382e921833beac04b0f83e0355ed5c"
+  },
+  {
+    "specversion": "1.0",
+    "id": "audit_4b1b798fd0734f97",
+    "type": "ai.agentmesh.tool.invoked",
+    "source": "capability-guard",
+    "time": "2026-10-31T01:31:21.639709+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "start",
+      "resource": "lookup_order",
+      "outcome": "success",
+      "policy_decision": null,
+      "matched_rule": null,
+      "tool": "lookup_order"
+    },
+    "agentmeshentryhash": "e06ff89257df3604ec8e6b2209c944d6f7df5a4b20e0270ab9342b6b2993d110",
+    "agentmeshprevioushash": "fcde1892e3b152d79c60d8e69b2c4eef706661f94197c1238be19ddc21a33717"
+  },
+  {
+    "specversion": "1.0",
+    "id": "audit_ac89a33c97404400",
+    "type": "ai.agentmesh.tool.invoked",
+    "source": "capability-guard",
+    "time": "2026-10-31T01:31:21.639922+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "complete",
+      "resource": "lookup_order",
+      "outcome": "success",
+      "policy_decision": null,
+      "matched_rule": null,
+      "tool": "lookup_order",
+      "result_preview": "{'order_id': 'ord_7731', 'customer': 'dana@example.com', 'charges': [{'id': 'ch_3QF1aa', 'amount': 42.0}, {'id': 'ch_3QF1ab', 'amount': 42.0}]}"
+    },
+    "agentmeshentryhash": "5ea93e75dad07ab54f04543ad558ba72457d6a5eb4a90e8714fc72f3ea10c2e3",
+    "agentmeshprevioushash": "e06ff89257df3604ec8e6b2209c944d6f7df5a4b20e0270ab9342b6b2993d110"
+  },
+  {
+    "specversion": "1.0",
+    "id": "audit_c0fb2663129c4953",
+    "type": "ai.agentmesh.tool.invoked",
+    "source": "capability-guard",
+    "time": "2026-10-31T01:31:21.640037+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "start",
+      "resource": "issue_refund",
+      "outcome": "success",
+      "policy_decision": null,
+      "matched_rule": null,
+      "tool": "issue_refund"
+    },
+    "agentmeshentryhash": "af9ba26c0fbc7c1b56806d43610f1ca07c2c95fad9c71d361587b76c6af85a9f",
+    "agentmeshprevioushash": "5ea93e75dad07ab54f04543ad558ba72457d6a5eb4a90e8714fc72f3ea10c2e3"
+  },
+  {
+    "specversion": "1.0",
+    "id": "audit_7f8f04b3964d4859",
+    "type": "ai.agentmesh.tool.invoked",
+    "source": "capability-guard",
+    "time": "2026-10-31T01:31:21.640145+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "complete",
+      "resource": "issue_refund",
+      "outcome": "success",
+      "policy_decision": null,
+      "matched_rule": null,
+      "tool": "issue_refund",
+      "result_preview": "{'refund_id': 're_3QF8x2LkT', 'charge': 'ch_3QF1ab', 'order_id': 'ord_7731', 'amount': 42.0, 'currency': 'usd', 'status': 'succeeded'}"
+    },
+    "agentmeshentryhash": "b6cd5fe0e214ef8a274e99a22499282eb4ec163aca15f8a17f73286a2c30849e",
+    "agentmeshprevioushash": "af9ba26c0fbc7c1b56806d43610f1ca07c2c95fad9c71d361587b76c6af85a9f"
+  },
+  {
+    "specversion": "1.0",
+    "id": "audit_024d2e609cd74f8e",
+    "type": "ai.agentmesh.tool.blocked",
+    "source": "capability-guard",
+    "time": "2026-10-31T01:31:21.640241+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "deny",
+      "resource": "delete_customer_account",
+      "outcome": "denied",
+      "policy_decision": null,
+      "matched_rule": null,
+      "tool": "delete_customer_account",
+      "reason": "Tool 'delete_customer_account' is in denied_tools"
+    },
+    "agentmeshentryhash": "85deaf683b744857fbaa961083d9bd55bfd230c7b3d236b6cbca9e85d0bb3b41",
+    "agentmeshprevioushash": "b6cd5fe0e214ef8a274e99a22499282eb4ec163aca15f8a17f73286a2c30849e"
+  },
+  {
+    "specversion": "1.0",
+    "id": "audit_8512789b23b949c3",
+    "type": "ai.agentmesh.tool.invoked",
+    "source": "capability-guard",
+    "time": "2026-10-31T01:31:21.640329+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "start",
+      "resource": "send_email",
+      "outcome": "success",
+      "policy_decision": null,
+      "matched_rule": null,
+      "tool": "send_email"
+    },
+    "agentmeshentryhash": "e069abb6eff10e1cd80e554f5816d46c2d814e7b498c3abd2326f2afa6b271df",
+    "agentmeshprevioushash": "85deaf683b744857fbaa961083d9bd55bfd230c7b3d236b6cbca9e85d0bb3b41"
+  },
+  {
+    "specversion": "1.0",
+    "id": "audit_78f25dbdf2134eb7",
+    "type": "ai.agentmesh.tool.invoked",
+    "source": "capability-guard",
+    "time": "2026-10-31T01:31:21.640407+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "start",
+      "resource": "post_slack_message",
+      "outcome": "success",
+      "policy_decision": null,
+      "matched_rule": null,
+      "tool": "post_slack_message"
+    },
+    "agentmeshentryhash": "9612489e2162e7c77989351bc8c5da295a54441e750f286d8923c97bd4450707",
+    "agentmeshprevioushash": "e069abb6eff10e1cd80e554f5816d46c2d814e7b498c3abd2326f2afa6b271df"
+  },
+  {
+    "specversion": "1.0",
+    "id": "audit_b169ce50d522401c",
+    "type": "ai.agentmesh.tool.invoked",
+    "source": "capability-guard",
+    "time": "2026-10-31T01:31:21.640524+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "complete",
+      "resource": "post_slack_message",
+      "outcome": "success",
+      "policy_decision": null,
+      "matched_rule": null,
+      "tool": "post_slack_message",
+      "result_preview": "{'ok': True, 'channel': 'support-escalations', 'message_id': 'msg_01HZX4QK'}"
+    },
+    "agentmeshentryhash": "51584215bc25ec56d77a2601c23f06082f810719fba62fe6f7fee4538e1aad1c",
+    "agentmeshprevioushash": "9612489e2162e7c77989351bc8c5da295a54441e750f286d8923c97bd4450707"
+  },
+  {
+    "specversion": "1.0",
+    "id": "audit_22ac5609f0f14f12",
+    "type": "ai.agentmesh.agent_invocation",
+    "source": "support-agent",
+    "time": "2026-10-31T01:31:21.640615+00:00Z",
+    "datacontenttype": "application/json",
+    "data": {
+      "action": "complete",
+      "resource": null,
+      "outcome": "success",
+      "policy_decision": null,
+      "matched_rule": null,
+      "agent_name": "support-agent",
+      "elapsed_seconds": 4.2113,
+      "start_entry_id": "see first row"
+    },
+    "agentmeshentryhash": "b82447912edeb0f7562372a1d78734bf252c71e894462c3f6e6b5f9f7c511ac8",
+    "agentmeshprevioushash": "51584215bc25ec56d77a2601c23f06082f810719fba62fe6f7fee4538e1aad1c"
+  }
+]

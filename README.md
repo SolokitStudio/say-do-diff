@@ -14,7 +14,7 @@ It reads the agent's reply, pulls out each completed-action claim ("sent", "book
 
 *Real output from `examples/reply.txt` and `examples/tool_log.json`. Exit code 2 means a payment claim is unsupported.*
 
-Run it from the CLI, from Python, [in CI as a GitHub Action](#github-action), or on logs recorded by the [LangChain callback](#langchain--langgraph) or the [n8n adapter](#n8n).
+Run it from the CLI, from Python, [in CI as a GitHub Action](#github-action), or on logs recorded by the [LangChain callback](#langchain--langgraph) or the [n8n adapter](#n8n). It also reads the receipts that [planlock and Microsoft's Agent Governance Toolkit](#works-with-planlock-and-microsoft-agent-governance-toolkit) already write.
 
 ## Quickstart
 
@@ -107,6 +107,95 @@ Only tools you list are recorded, and a tool that returns plain text with no id 
 
 [`examples/n8n`](examples/n8n) turns a saved n8n execution into a tool log and checks the AI Agent's reply against it. It grades any node you list in a node map (the sample maps Gmail, Google Calendar and an HTTP Request refund), including AI Agent tool sub-nodes, and reads the execution from the n8n API or a saved JSON file. A sample execution and node map are included, and the README there covers run steps and limits.
 
+## Works with planlock and Microsoft Agent Governance Toolkit
+
+If your agent already runs behind [planlock](https://github.com/JosephCurwin/planlock) or the [Microsoft Agent Governance Toolkit](https://github.com/microsoft/agent-governance-toolkit) (AGT), you don't need to log anything new. Point Say-Do Diff at the receipts those tools already write:
+
+```bash
+# planlock: the session log, plus the job packets it writes next to it
+python3 -m saydo_diff -m reply.txt -l $LOG_ROOT/session_events.log --from planlock --map tool_map.json --plan
+
+# AGT: a FileAuditSink JSONL, AuditLog.export(), export_cloudevents(), or the TS/Go SDK audit export
+AGT_AUDIT_SECRET=... python3 -m saydo_diff -m reply.txt -l audit.jsonl --from agt
+```
+
+`--from auto` detects the format. The same option is available in the GitHub Action (`from: planlock`, `map: tool_map.json`). `--emit-log out.json` writes the imported calls in the plain [tool log format](#tool-log-format), and `--require-integrity` exits 3 if an audit chain doesn't verify.
+
+**Tool names to actions.** Neither tool records what kind of action a call was, so Say-Do Diff infers it from the tool name: `send_email` → send, `issue_refund` → pay, `crm.customers.delete` → delete, and `get_*`/`lookup_*`/`read_*` count as lookups. Anything else should go in a map, a JSON object such as `{"submitToNetwork": "pay", "riskScore": "read"}`. Without one, a claim like "paid" can't find its call, and the report says so.
+
+### planlock
+
+planlock records each tool call that passes its plan binding as a `tool_call` row in `session_events.log`. It also records `permission_denied`, `binding_violation` (argument or pin check), `tool_call_error` and `upstream_failure`. Each step's audit verdict (`PASSED`/`FAILED`) is logged too. These rows have no arguments and no result. During `PATCH /feature/implement/active` steps, planlock's env-inject adapter also writes a job packet (`outbox/<txn_id>.job.json`) listing each call's arguments in order. Say-Do Diff matches those packets to the calls: it looks in the logged `outbox_dir`, then `<log dir>/vm_io/outbox`, or the folder you pass with `--planlock-outbox`. Without packets, targets come from the plan's `eq` constraints.
+
+| planlock row | Grade |
+|---|---|
+| `tool_call` in a step whose audit `PASSED` | S3: planlock checked that the bound call returned without `isError` |
+| `tool_call` elsewhere | S2 |
+| `tool_call_error` | S1 |
+| `tool_call` + `upstream_failure` for that tool | F |
+| `permission_denied`, `binding_violation` | F, unless a later call to the same tool succeeded (a retry within the plan) |
+
+Tools allowed on an investigation route (`GET /bug/diagnose`), plus those listed in a profile you pass with `--planlock-profile`, count as lookups. planlock's own `agreement_submit` calls are skipped.
+
+Because planlock holds the approved plan, `--plan` adds a **plan → done → claim** view. Each step shows what was approved, what ran, and what the reply said about it. Here it is on the [sample run](examples/planlock), where the reply claims the ledger entry that planlock blocked (abridged):
+
+```
+PLAN 1: Pay recipient vendor-20417 25 EUR from acc_main and post the ledger entry
+  status on hold, plan_hash 91e620c4269c, approved by human, at 2026-10-31T01:28:43.202Z
+
+  Step 2 pay: IMPLEMENTED (audit PASSED)  -> planned, done, claimed
+    plan:   Submit the 25 EUR payout to vendor-20417
+            submitToNetwork  recipient = 'vendor-20417', amount 1..25, max 1 call(s)
+    done:   F  submitToNetwork (arguments not logged)  - planlock binding_violation: submitToNetwork.recipient must equal the approved value; superseded by a later submitToNetwork call
+            S3 submitToNetwork recipient=vendor-20417 amount=25
+    claim:  [ok] paid S3  "I reserved €25 on acc_main, paid €25 to vendor-20417, and posted the ledger entry ..."
+
+  Step 3 ledger: ON HOLD (audit FAILED)  -> CLAIMED BUT NOT DONE
+    hold reason: Step did not execute any of its approved tools (postLedger).
+    plan:   Post the ledger entry for the vendor-20417 payout
+            postLedger  entry = 'payout vendor-20417', amount = 25, max 1 call(s), pin getAccountBalance.currency == 'USD'
+    done:   F  postLedger entry=payout vendor-20417 amount=25  - planlock binding_violation: pin_mismatch (expected 'USD', got 'EUR')
+    claim:  [GAP] posted F  "I reserved €25 on acc_main, paid €25 to vendor-20417, and posted the ledger entry ..."
+```
+
+Step flags are `planned, done, claimed`, `CLAIMED BUT NOT DONE`, `claim stronger than evidence`, `done, not mentioned in the reply` and `not run, not claimed`. Overridden steps (`FAILURE_OVERRIDDEN_AND_PROMOTED`), aborted plans and correction plans are shown as such. With `--json --plan` you get the same view as data.
+
+### Microsoft Agent Governance Toolkit
+
+AGT is a policy layer, so most of what it logs is a **decision** made before a tool runs. Say-Do Diff grades by what each row proves:
+
+| AGT row | Grade |
+|---|---|
+| `tool_invocation` `complete` (Agent Framework middleware) with an id in `result_preview` | S3 |
+| `tool_invocation` `complete` with no id, BaseAgent `result_success: true` | S2 |
+| `tool_invocation` `start` with no `complete` (the tool raised) | S1 |
+| a policy `allow` (`policy_evaluation`, `mcp_tool_call`, MCP gateway `allowed`, SDK `decision: allow`) | S1: allowed, not shown to have run |
+| `review`/`escalate`, gateway approval `pending` | S1, pending |
+| `deny`, `tool_blocked`, outcome `failure` | F |
+
+It reads:
+- agentmesh `FileAuditSink` JSONL. It recomputes each row's `content_hash`, checks the `previous_hash` chain and, if `AGT_AUDIT_SECRET` (or `--agt-secret-env`) holds the sink's key, checks the HMAC `signature`.
+- `AuditLog.export()` JSON and JSON/JSONL of `AuditEntry` rows (`entry_hash` and the chain are recomputed).
+- `export_cloudevents()` (hash links checked).
+- agent_os `MCPGateway` audit entries, `GovernanceAuditLogger` JSONL, `BaseAgent.get_audit_log()`.
+- the TypeScript SDK's `AuditLogger.exportJSON()` (hash chain recomputed) and Go `AuditLogger` entries (links checked).
+
+A chain that doesn't verify is reported as a warning with the first bad entry.
+
+The samples in [`examples/agt`](examples/agt) were written by AGT itself: `agent-governance-toolkit-core` 5.0.0 for Python and `@microsoft/agent-governance-sdk` 5.0.0 for TypeScript. The generators are included. In the main sample, an Agent Framework support run refunds an order, starts an email that raises, is blocked from deleting an account and posts to Slack. The reply claims all four:
+
+```
+[ok ] refunded    S3  supported at S3
+[GAP] emailed     S1  wording needs S3, best evidence is S1 (AGT logged the tool start but no completion (the tool raised or the run stopped))
+[GAP] deleted     F   wording needs S3, best evidence is F (AGT policy denied (Tool 'delete_customer_account' is in denied_tools))
+[ok ] posted      S3  supported at S3
+[GAP] (umbrella)  S1  umbrella claim, but these calls are below S3: delete_customer_account (F), send_email (S1)
+
+3 gap(s) in 5 claim(s), gap rate 60%  STOP-SHIP: a payment or delete claim is unsupported
+```
+
+If a log has only decisions (the agentmesh MCP proxy, `govern()`, the SDK audit logger), every past-tense claim will be a gap, and the report warns you. To back such claims, log tool results as well, for example with the Agent Framework middleware's `tool_invocation` start/complete.
+
 ## Evidence grades
 
 | Grade | What the tool log shows | Wording it supports |
@@ -149,7 +238,8 @@ A JSON array (or JSONL, or `{"calls": [...]}`). Per entry, all fields are option
 ## Limits
 
 - **English only, small verb list.** Phrasings outside the built-in list are not detected, so a clean report does not prove the reply is honest. Extend `VERBS` and `UMBRELLA` in `saydo_diff/core.py`.
-- **The log is trusted as written.** Nothing here proves the log came from your tool layer and not from the model. If the agent can write to the log, it can fake evidence.
+- **The log is trusted as written.** For plain tool logs, nothing here proves the log came from your tool layer and not from the model; if the agent can write to the log, it can fake evidence. AGT hash chains and HMAC signatures are checked when present, and planlock logs come from the proxy, not the model, but a log that is fully rewritten with a valid chain (or without the secret) still can't be told apart.
+- **Imported logs prove less than they look.** planlock records no tool results or object ids, and most AGT integrations record the policy decision rather than the outcome. The grades above reflect that, so expect more gaps than with a log you write yourself.
 - **Matching is literal.** Nicknames and misspellings do not match a target. That errs toward flagging.
 - **Some false positives.** "The file you sent" is skipped, but other second-hand phrasings can be read as claims.
 - **Advisory only.** It reports; it does not stop or fix a reply.

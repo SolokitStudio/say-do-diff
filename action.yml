@@ -28,6 +28,14 @@ inputs:
     description: "File name of the tool log inside each run folder."
     required: false
     default: "tool_log.json"
+  from:
+    description: "Log format: `native` (say-do-diff JSON), `planlock` (session_events.log), `agt` (Agent Governance Toolkit audit log) or `auto`."
+    required: false
+    default: "native"
+  map:
+    description: "Optional JSON file mapping tool names to actions (send, pay, book, ...), for `planlock` and `agt` logs."
+    required: false
+    default: ""
   fail-on:
     description: "`gap` (any unsupported claim), `stop-ship` (only unsupported payment/delete claims) or `never`."
     required: false
@@ -68,5 +76,7 @@ runs:
         SAYDO_REPLY_FILE: ${{ inputs.reply-file }}
         SAYDO_LOG_FILE: ${{ inputs.log-file }}
         SAYDO_FAIL_ON: ${{ inputs.fail-on }}
+        SAYDO_FROM: ${{ inputs.from }}
+        SAYDO_MAP: ${{ inputs.map }}
         SAYDO_JSON_REPORT: ${{ inputs.json-report }}
       run: ${{ inputs.python }} "${{ github.action_path }}/action/run_action.py"

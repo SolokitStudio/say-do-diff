@@ -195,6 +195,11 @@ def check_claim(claim: Claim, calls: list) -> Finding:
     if claim.umbrella:
         if not calls:
             return Finding(claim, "gap", "S0", "umbrella claim, but the log has no tool calls")
+        # read-only lookups and blocked attempts that a later call replaced don't count against "all set"
+        live = [c for c in calls if not c.get("informational") and not c.get("superseded")]
+        if not live:
+            return Finding(claim, "gap", "S0", "umbrella claim, but the log has only read-only lookups")
+        calls = live
         weak = [c for c in calls if RANK[c["_grade"]] < 3]
         if weak:
             names = ", ".join(f"{c.get('tool', '?')} ({c['_grade']})" for c in weak)
@@ -208,6 +213,8 @@ def check_claim(claim: Claim, calls: list) -> Finding:
     matched = same
     if claim.targets:
         matched = [c for c in same if any(t in _target_text(c) for t in claim.targets)]
+        # an imported call whose arguments were not recorded may be the one the claim means
+        matched += [c for c in same if c.get("target_unknown") and c not in matched]
         if not matched:
             seen = ", ".join(sorted({_target_text(c).strip() or "?" for c in same}))
             return Finding(claim, "gap", "S0",
@@ -228,15 +235,24 @@ def check_claim(claim: Claim, calls: list) -> Finding:
                            f"partial batch: {len(good)} of {claim.count} reached {claim.needs}", ids)
         return Finding(claim, "ok", grade, f"{len(good)} of {claim.count} reached {claim.needs}", ids)
     if RANK[grade] < RANK[claim.needs]:
-        return Finding(claim, "gap", grade, f"wording needs {claim.needs}, best evidence is {grade}", ids)
+        return Finding(claim, "gap", grade, f"wording needs {claim.needs}, best evidence is {grade}"
+                       + _why(matched, grade), ids)
     return Finding(claim, "ok", grade, f"supported at {grade}", ids)
+
+
+def _why(calls: list, grade: str) -> str:
+    """The note of the best call, when an importer left one (e.g. 'planlock binding_violation: ...')."""
+    for c in calls:
+        if c["_grade"] == grade and c.get("note"):
+            return f" ({c['note']})"
+    return ""
 
 
 def find_duplicates(calls: list) -> list:
     """Two live calls with the same tool, action and target and no shared idempotency key."""
     groups = {}
     for c in calls:
-        if RANK[c["_grade"]] < 2 or c.get("repeat_ok"):
+        if RANK[c["_grade"]] < 2 or c.get("repeat_ok") or c.get("informational"):
             continue
         key = (c.get("tool"), c.get("action"), json.dumps(c.get("target"), sort_keys=True))
         groups.setdefault(key, []).append(c)
@@ -253,6 +269,8 @@ def find_duplicates(calls: list) -> list:
 class Report:
     findings: list
     duplicates: list
+    calls: list = field(default_factory=list, repr=False)
+    imported: object = field(default=None, repr=False)   # adapters.Imported when the log was imported
 
     @property
     def gaps(self) -> list:
@@ -267,12 +285,23 @@ class Report:
         return any(f.claim.action in ("pay", "delete") for f in self.gaps)
 
     def to_dict(self) -> dict:
-        return {"claims": len(self.findings), "gaps": len(self.gaps), "gap_rate": round(self.gap_rate, 3),
-                "stop_ship": self.stop_ship, "duplicates": self.duplicates,
-                "findings": [f.to_dict() for f in self.findings]}
+        d = {"claims": len(self.findings), "gaps": len(self.gaps), "gap_rate": round(self.gap_rate, 3),
+             "stop_ship": self.stop_ship, "duplicates": self.duplicates,
+             "findings": [f.to_dict() for f in self.findings]}
+        if self.imported is not None:
+            d["source"] = {"format": self.imported.format, "meta": self.imported.meta,
+                           "warnings": self.imported.warnings}
+            d["calls"] = [{k: v for k, v in c.items() if k != "_i"} for c in self.calls]
+        return d
 
     def to_text(self) -> str:
         lines = []
+        if self.imported is not None:
+            m = self.imported.meta
+            integ = m.get("integrity") or {}
+            chain = f"; integrity: {integ['detail']}" if integ.get("ok") else ""
+            lines.append(f"(imported {m.get('calls', len(self.calls))} call(s) from {self.imported.format} log{chain})")
+            lines += [f"[WARN] {w}" for w in self.imported.warnings]
         for f in self.findings:
             mark = "GAP" if f.status == "gap" else "ok "
             lines.append(f"[{mark}] {f.claim.verb:<11} {f.grade:<2}  {f.reason}")
@@ -285,6 +314,21 @@ class Report:
         return "\n".join(lines)
 
 
-def diff(message: str, log) -> Report:
+def diff(message: str, log, source: str = "native", mapping=None, **opts) -> Report:
+    """Check a reply against a log. source: "native" (default), "planlock", "agt" or "auto".
+
+    For an imported source, `log` is a file path, `mapping` an optional {tool: action} dict, and opts go to
+    the importer (planlock: outbox=, profile=; agt: secret_env=).
+    """
+    imported = None
+    if source != "native":
+        from .adapters import import_log
+        imported = import_log(log, source, mapping=mapping, **opts)
+        log = imported.calls
     calls = load_log(log)
-    return Report([check_claim(c, calls) for c in extract_claims(message)], find_duplicates(calls))
+    findings = [check_claim(c, calls) for c in extract_claims(message)]
+    if imported is not None:
+        for f in findings:
+            if f.reason.startswith("no '") and calls:
+                f.reason += " (actions were inferred from tool names; pass a tool map to set them)"
+    return Report(findings, find_duplicates(calls), calls, imported)

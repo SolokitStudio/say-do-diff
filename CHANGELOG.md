@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.3.0 (2026-10-30)
+
+- **Reads planlock and Microsoft Agent Governance Toolkit receipts.** `--from planlock|agt|auto`
+  (and `from:` / `map:` in the GitHub Action) imports the logs these tools already write. No new
+  logging is needed.
+  - **planlock**: `session_events.log` rows (`tool_call`, `tool_call_error`, `permission_denied`,
+    `binding_violation`, `upstream_failure`, audit verdicts, plan lifecycle events) plus the
+    env-inject job packets (`outbox/<txn_id>.job.json`) for arguments. Calls in a step whose audit
+    passed grade S3; blocked attempts that a later call to the same tool replaced are marked
+    superseded.
+  - **AGT**: agentmesh `FileAuditSink` JSONL, with content hashes and the chain recomputed and HMAC
+    signatures checked when `AGT_AUDIT_SECRET` is set. Also `AuditLog.export()`,
+    `export_cloudevents()`, agent_os `MCPGateway` / `GovernanceAuditLogger` / `BaseAgent` audit
+    logs, and the TypeScript and Go SDK audit exports. Policy decisions (allow/deny/review) are
+    graded apart from recorded outcomes: an `allow` alone is S1.
+  - Tool names map to actions by keyword, or through a `--map` JSON file.
+- **Plan → done → claim view** (`--plan`, also in `--json`). For planlock runs it shows each
+  approved step's constraints, the calls that ran and the reply's claims about it, with a flag
+  such as `CLAIMED BUT NOT DONE`.
+- `--emit-log` writes the imported calls as a plain say-do-diff log. `--require-integrity` exits
+  3 when an audit chain doesn't verify.
+- Sample receipts written by planlock v0.7.0, AGT Python 5.0.0 and the AGT TypeScript SDK 5.0.0 are
+  in `examples/planlock` and `examples/agt`. A new CI job re-checks them against the real
+  toolkit.
+- Core: an umbrella claim ("all set") is now a gap when the run has only read-only lookups. Lookup
+  and superseded calls are skipped by the umbrella and duplicate checks. A gap reason now includes
+  the best call's note.
+- Python API: `saydo_diff.import_log()`, `detect()`, `load_mapping()`, and
+  `diff(message, log, source, mapping=...)`.
+
 ## v0.2.1 (2026-10-30)
 
 - **LangChain callback fix.** A tool call that raised (`on_tool_error`) now keeps the attempted

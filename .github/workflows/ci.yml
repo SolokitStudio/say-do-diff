@@ -71,3 +71,42 @@ jobs:
 
       - name: Expect the previous step to have failed
         run: test "${{ steps.gate.outcome }}" = "failure"
+
+      - name: planlock log through the Action
+        id: planlock
+        uses: ./
+        with:
+          message: examples/planlock/reply.txt
+          log: examples/planlock/session_events.log
+          from: planlock
+          map: examples/planlock/tool_map.json
+          fail-on: never
+
+      - name: AGT audit log through the Action
+        id: agt
+        uses: ./
+        with:
+          message: examples/agt/reply.txt
+          log: examples/agt/maf_audit.jsonl
+          from: auto
+          fail-on: never
+
+      - name: Check importer outputs
+        run: |
+          test "${{ steps.planlock.outputs.claims }}" = "4"
+          test "${{ steps.planlock.outputs.gaps }}" = "2"
+          test "${{ steps.planlock.outputs.stop-ship }}" = "false"
+          test "${{ steps.agt.outputs.claims }}" = "5"
+          test "${{ steps.agt.outputs.gaps }}" = "3"
+          test "${{ steps.agt.outputs.stop-ship }}" = "true"
+
+  importers:
+    name: AGT fixtures re-verified with the real toolkit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install "agent-governance-toolkit-core==5.0.0"
+      - run: python -W ignore tests/agt_crosscheck.py

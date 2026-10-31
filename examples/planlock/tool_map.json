@@ -1,0 +1,9 @@
+{
+  "reserveFunds": "book",
+  "submitToNetwork": "pay",
+  "postLedger": "post",
+  "assembleInstruction": "create",
+  "checkCompliance": "read",
+  "getAccountBalance": "read",
+  "riskScore": "read"
+}

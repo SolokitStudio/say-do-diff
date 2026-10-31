@@ -40,11 +40,21 @@ def main(env=None) -> int:
     if fail_on not in ("gap", "stop-ship", "never"):
         raise SystemExit(f"say-do-diff: fail-on must be gap, stop-ship or never, not {fail_on!r}")
 
+    source = (env.get("SAYDO_FROM") or "native").strip().lower()
+    if source not in ("native", "planlock", "agt", "auto"):
+        raise SystemExit(f"say-do-diff: from must be native, planlock, agt or auto, not {source!r}")
+    opts = {}
+    if source != "native" or env.get("SAYDO_MAP"):
+        from saydo_diff.adapters import load_mapping
+        opts["mapping"] = load_mapping(env.get("SAYDO_MAP") or None)
+        source = "auto" if source == "native" else source
+
     results, claims, gaps, failed, stop = [], 0, 0, 0, False
     summary = ["## Say-Do Diff", "", "| Run | Claims | Gaps | Stop-ship |", "|---|---|---|---|"]
     for name, msg_path, log_path in pairs(env):
         with open(msg_path, encoding="utf-8") as fh:
-            report = diff(fh.read(), log_path)
+            text = fh.read()
+        report = diff(text, log_path) if source == "native" else diff(text, log_path, source, **opts)
         print(f"== {name}\n{report.to_text()}\n")
         claims += len(report.findings)
         gaps += len(report.gaps)
