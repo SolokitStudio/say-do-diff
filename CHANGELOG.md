@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.3.1 (2026-10-31)
+
+- **GitHub Action: `runs:` accepts a glob.** A quoted pattern such as `runs: "eval/**/run-*"`
+  checks every matched run folder. Each run is checked once when matches overlap, and a
+  glob-matched run is named by its full matched path (relative or absolute, as the pattern
+  gives it) rather than relative to a runs folder. A pattern with no complete reply/log pair
+  fails with the same error as an empty runs folder, and an existing directory is still taken
+  literally, including names containing `[` or `*`. Closes #6. Contributed by
+  @awais-ur-rehman in #8.
+
 ## v0.3.0 (2026-10-30)
 
 - **Reads planlock and Microsoft Agent Governance Toolkit receipts.** `--from planlock|agt|auto`

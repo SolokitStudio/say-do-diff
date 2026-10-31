@@ -86,7 +86,8 @@ Check saved agent runs on every pull request and fail the build when a reply cla
 
 The `runs` input also accepts a quoted glob such as `runs: "eval/**/run-*"`.
 The action searches each matched directory recursively, checks each run once even
-when matches overlap, and uses its matched path as the run name. A glob with no
+when matches overlap, and names each run by its full matched path, written as the
+pattern gives it (relative or absolute), rather than relative to a runs folder. A glob with no
 complete reply/log pair fails with the same error as an empty runs folder. An
 existing directory is treated literally, including names containing `[` or `*`.
 
