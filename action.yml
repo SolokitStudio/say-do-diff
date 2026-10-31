@@ -16,7 +16,7 @@ inputs:
     default: ""
   runs:
     description: >
-      Directory of saved runs. Every sub-folder that holds a reply file and a log file is checked.
+      Directory or glob of saved runs. Every sub-folder that holds a reply file and a log file is checked.
       Use instead of message/log.
     required: false
     default: ""

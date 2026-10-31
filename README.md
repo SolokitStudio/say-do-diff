@@ -84,6 +84,12 @@ Check saved agent runs on every pull request and fail the build when a reply cla
     json-report: saydo-report.json
 ```
 
+The `runs` input also accepts a quoted glob such as `runs: "eval/**/run-*"`.
+The action searches each matched directory recursively, checks each run once even
+when matches overlap, and uses its matched path as the run name. A glob with no
+complete reply/log pair fails with the same error as an empty runs folder. An
+existing directory is treated literally, including names containing `[` or `*`.
+
 Or check a single pair with `message:` and `log:` instead of `runs:`. Each gap becomes an error annotation on the reply file, the job summary gets a table per run, and the step sets `claims`, `gaps`, `stop-ship` and `failed-runs` outputs. The action is a composite action that uses the runner's Python 3.10+ (`python3` on the Linux and macOS hosted runners; set the `python` input elsewhere) and installs nothing. A full workflow is in [`examples/github-action/saydo-diff.yml`](examples/github-action/saydo-diff.yml), and [`examples/ci/runs`](examples/ci/runs) has a passing and a failing run to try it on.
 
 The action checks logs you already have; producing them (replaying your agent against fixtures, or saving production runs) is up to your pipeline.
