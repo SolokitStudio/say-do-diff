@@ -266,9 +266,13 @@ The trade-off: the Gate needs you to wrap your tools so they write receipts, whi
 
 If you'd rather audit by hand first, the free [Say-Do Diff checklist](https://solokit33.gumroad.com/l/bkgskz) is a 10-minute paper version of the same check. The Gate is also included in the [Operations Suite](https://solokit33.gumroad.com/l/operations-trio) ($149).
 
+## Related
+
+- [agent-skills](https://github.com/SolokitStudio/agent-skills): free Agent Skills for Claude Code, Cursor, Codex and Gemini CLI. Its `solo-say-do-check` skill runs the same say-do check inside your coding agent, on any evidence you give it: email exports, payment CSVs, post lists or tool logs.
+
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](ROADMAP.md). Questions and ideas go in [Discussions](https://github.com/SolokitStudio/say-do-diff/discussions); small starter tasks are labelled [good first issue](https://github.com/SolokitStudio/say-do-diff/labels/good%20first%20issue).
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](ROADMAP.md). Questions and ideas go in [Discussions](https://github.com/SolokitStudio/say-do-diff/discussions); small starter tasks are labelled [good first issue](https://github.com/SolokitStudio/say-do-diff/labels/good%20first%20issue). Everyone taking part agrees to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

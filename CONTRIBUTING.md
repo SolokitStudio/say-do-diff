@@ -3,6 +3,8 @@
 Thanks for helping. Say-Do Diff is small on purpose, so changes are easiest to review when they are
 small too.
 
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By taking part, you agree to follow it.
+
 ## Ground rules
 
 - **Standard library only** in `saydo_diff/`. Examples may use a framework, but their tests must run

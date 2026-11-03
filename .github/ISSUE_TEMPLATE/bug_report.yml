@@ -1,0 +1,32 @@
+name: Bug report
+description: A wrong grade, a missed or false flag, a crash, or a docs error.
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Checker (CLI or library), GitHub Action, LangChain / LangGraph, n8n, planlock or AGT import, Docs, Other]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version and Python
+      description: Output of `python3 -c "import saydo_diff; print(saydo_diff.__version__)"` and `python3 --version`, or the action ref you use.
+      placeholder: "0.3.1, Python 3.12 / SolokitStudio/say-do-diff@v0"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command you ran, what you expected, and what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reply and tool log
+      description: The smallest reply text and tool-call log that show the problem. Remove private data.
+      render: text
